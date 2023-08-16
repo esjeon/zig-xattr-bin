@@ -57,7 +57,7 @@ pub fn main() !void {
     switch (mode) {
         .List => {
             const ret = std.os.linux.listxattr(path, retbuf.ptr, retbuf.len);
-            if (ret == -1) {
+            if (ret > retbuf.len) { // XXX: testing for unsigned -1.
                 perror("getxattr failed: ");
                 std.os.exit(1);
             }
@@ -76,9 +76,8 @@ pub fn main() !void {
         .Get => {
             const attrnameZ = try allocator.dupeZ(u8, attrname.?);
 
-            // XXX: getxattr returns unsigned type, but it also returns -1 for failure.
             const ret = std.os.linux.getxattr(path, attrnameZ, retbuf.ptr, retbuf.len);
-            if (ret > retbuf.len) {
+            if (ret > retbuf.len) { // XXX: testing for unsigned -1.
                 perror("getxattr failed");
                 std.os.exit(1);
             }
