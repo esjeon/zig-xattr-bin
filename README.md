@@ -43,3 +43,7 @@ Set an attribute of a file ot a specific value:
 Attribute value can be read from stdin, by omitting `-V` option:
 
     generate_some_output | xattr -s attrname pathname
+
+Attributes can also be removed:
+
+    xattr -r attrname pathname

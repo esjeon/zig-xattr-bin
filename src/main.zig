@@ -3,12 +3,13 @@ const Args = @import("args.zig");
 
 extern "c" fn perror([*c]const u8) void;
 
-const ProgramMode = enum { Usage, List, Get, Set };
+const ProgramMode = enum { Usage, List, Get, Set, Remove };
 
 fn usage() void {
     std.debug.print(
         \\Usage: xattr -g attrname pathname
         \\       xattr -s attrname [ -V attrvalue ] pathname
+        \\       xattr -r attrname pathname
         \\       xattr -l pathname
         \\
     , .{});
@@ -36,6 +37,10 @@ pub fn main() !void {
             },
             'V' => {
                 attrvalue = try args.readString();
+            },
+            'r' => {
+                mode = .Remove;
+                attrname = try args.readString();
             },
             else => usage(),
         }
@@ -99,6 +104,15 @@ pub fn main() !void {
             const ret = std.os.linux.setxattr(path, attrnameZ, attrvalueV, attrvalue.?.len, 0);
             if (ret != 0) {
                 perror("setxattr failed");
+                std.os.exit(1);
+            }
+        },
+        .Remove => {
+            const attrnameZ = try allocator.dupeZ(u8, attrname.?);
+
+            const ret = std.os.linux.removexattr(path, attrnameZ);
+            if (ret != 0) {
+                perror("removexattr failed");
                 std.os.exit(1);
             }
         },
