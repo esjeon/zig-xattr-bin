@@ -85,8 +85,13 @@ pub fn main() !void {
             try writer.print("{s}\n", .{retbuf[0..ret]});
         },
         .Set => {
-            // TODO: Implement reading attr value from stdin.
-            std.debug.assert(attrvalue != null);
+            if (attrvalue == null) {
+                const stdin = std.io.getStdIn().reader();
+                const ret = try stdin.readAll(retbuf);
+                // TODO: what if the input is larger than the buffer...?
+
+                attrvalue = retbuf[0..ret];
+            }
 
             const attrnameZ = try allocator.dupeZ(u8, attrname.?);
             const attrvalueV = @ptrCast(*const void, attrvalue.?.ptr);

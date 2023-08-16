@@ -39,3 +39,7 @@ Get an attribute of a file:
 Set an attribute of a file ot a specific value:
 
     xattr -s attrname -V attrvalue pathname
+
+Attribute value can be read from stdin, by omitting `-V` option:
+
+    generate_some_output | xattr -s attrname pathname
