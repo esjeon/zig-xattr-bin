@@ -1,5 +1,5 @@
-zig-xattr
-=========
+zig-xattr-bin
+=============
 
 This is a clone of [attr command][1] written in Zig. It basically reads and
 writes xattr information of a file.
