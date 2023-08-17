@@ -1,8 +1,6 @@
 const std = @import("std");
 const Args = @import("args.zig");
 
-extern "c" fn perror([*c]const u8) void;
-
 const ProgramMode = enum { Usage, List, Get, Set, Remove };
 
 fn usage() void {
@@ -63,8 +61,7 @@ pub fn main() !void {
         .List => {
             const ret = std.os.linux.listxattr(path, retbuf.ptr, retbuf.len);
             if (ret > retbuf.len) { // XXX: testing for unsigned -1.
-                perror("getxattr failed: ");
-                std.os.exit(1);
+                std.debug.panic("listxattr failed", .{});
             }
 
             var slice = retbuf[0..ret];
@@ -83,8 +80,7 @@ pub fn main() !void {
 
             const ret = std.os.linux.getxattr(path, attrnameZ, retbuf.ptr, retbuf.len);
             if (ret > retbuf.len) { // XXX: testing for unsigned -1.
-                perror("getxattr failed");
-                std.os.exit(1);
+                std.debug.panic("getxattr failed", .{});
             }
 
             try writer.print("{s}\n", .{retbuf[0..ret]});
@@ -103,8 +99,7 @@ pub fn main() !void {
 
             const ret = std.os.linux.setxattr(path, attrnameZ, attrvalueV, attrvalue.?.len, 0);
             if (ret != 0) {
-                perror("setxattr failed");
-                std.os.exit(1);
+                std.debug.panic("setxattr failed", .{});
             }
         },
         .Remove => {
@@ -112,8 +107,7 @@ pub fn main() !void {
 
             const ret = std.os.linux.removexattr(path, attrnameZ);
             if (ret != 0) {
-                perror("removexattr failed");
-                std.os.exit(1);
+                std.debug.panic("removexattr failed", .{});
             }
         },
         else => {
