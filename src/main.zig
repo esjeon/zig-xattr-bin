@@ -1,6 +1,11 @@
 const std = @import("std");
 const Args = @import("args.zig");
 
+const c = @cImport({
+    @cInclude("stdio.h");
+    @cInclude("sys/xattr.h");
+});
+
 const ProgramMode = enum { Usage, List, Get, Set, Remove };
 
 fn usage() void {
@@ -59,12 +64,14 @@ pub fn main() !void {
 
     switch (mode) {
         .List => {
-            const ret = std.os.linux.listxattr(path, retbuf.ptr, retbuf.len);
-            if (ret > retbuf.len) { // XXX: testing for unsigned -1.
-                std.debug.panic("listxattr failed", .{});
+            const ret = c.listxattr(path, retbuf.ptr, retbuf.len);
+            if (ret < 0) {
+                c.perror("listxattr failed");
+                std.process.exit(1);
             }
 
-            var slice = retbuf[0..ret];
+            const retlen: usize = @intCast(ret);
+            var slice = retbuf[0..retlen];
             while (slice.len > 0) {
                 const name = std.mem.sliceTo(slice, 0);
                 if (name.len == slice.len) {
@@ -78,12 +85,14 @@ pub fn main() !void {
         .Get => {
             const attrnameZ = try allocator.dupeZ(u8, attrname.?);
 
-            const ret = std.os.linux.getxattr(path, attrnameZ, retbuf.ptr, retbuf.len);
-            if (ret > retbuf.len) { // XXX: testing for unsigned -1.
-                std.debug.panic("getxattr failed", .{});
+            const ret = c.getxattr(path, attrnameZ, retbuf.ptr, retbuf.len);
+            if (ret < 0) {
+                c.perror("getxattr failed");
+                std.process.exit(1);
             }
 
-            try writer.print("{s}\n", .{retbuf[0..ret]});
+            const retlen: usize = @intCast(ret);
+            try writer.print("{s}\n", .{retbuf[0..retlen]});
         },
         .Set => {
             if (attrvalue == null) {
@@ -97,17 +106,19 @@ pub fn main() !void {
             const attrnameZ = try allocator.dupeZ(u8, attrname.?);
             const attrvalueV: *const void = @ptrCast(attrvalue.?.ptr);
 
-            const ret = std.os.linux.setxattr(path, attrnameZ, attrvalueV, attrvalue.?.len, 0);
+            const ret = c.setxattr(path, attrnameZ, attrvalueV, attrvalue.?.len, 0);
             if (ret != 0) {
-                std.debug.panic("setxattr failed", .{});
+                c.perror("setxattr failed");
+                std.process.exit(1);
             }
         },
         .Remove => {
             const attrnameZ = try allocator.dupeZ(u8, attrname.?);
 
-            const ret = std.os.linux.removexattr(path, attrnameZ);
+            const ret = c.removexattr(path, attrnameZ);
             if (ret != 0) {
-                std.debug.panic("removexattr failed", .{});
+                c.perror("removexattr failed");
+                std.process.exit(1);
             }
         },
         else => {
