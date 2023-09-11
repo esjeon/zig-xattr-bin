@@ -95,7 +95,7 @@ pub fn main() !void {
             }
 
             const attrnameZ = try allocator.dupeZ(u8, attrname.?);
-            const attrvalueV = @ptrCast(*const void, attrvalue.?.ptr);
+            const attrvalueV: *const void = @ptrCast(attrvalue.?.ptr);
 
             const ret = std.os.linux.setxattr(path, attrnameZ, attrvalueV, attrvalue.?.len, 0);
             if (ret != 0) {
